@@ -1,6 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-var peopleService = new PeopleService();
+using Trippin;
+
+var peopleService = new PeopleService("https://services.odata.org/TripPinRESTierService");
 while (true)
 {
     Console.WriteLine("Press 1 to get a list of people");
@@ -26,9 +28,17 @@ while (true)
 
 sealed class PeopleService
 {
+    private readonly Container container;
+
+    public PeopleService(string uri)
+    {
+        container = new(new Uri(uri));
+    }
+
     public void List()
     {
-        Console.WriteLine("List not yet implemented");
+        var people = container.People.ToArray();
+        Array.ForEach(people.Select(p => p.FirstName).ToArray(), Console.WriteLine);
     }
     public void Search()
     {
