@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Threading;
 using Trippin;
 
 sealed class PeopleService
@@ -21,5 +22,11 @@ sealed class PeopleService
     public void Search()
     {
         Console.WriteLine("Search not yet implemented");
+    }
+
+    internal async Task<Person> DetailsAsync(string userName, CancellationToken token)
+    {
+        var person = await container.People.ByKey(userName).GetValueAsync(token);
+        return person;
     }
 }
