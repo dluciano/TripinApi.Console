@@ -1,5 +1,6 @@
 ﻿using Mapster;
 using Microsoft.Extensions.Options;
+using Microsoft.OData.Client;
 using Trippin;
 
 namespace TrippinApi.Services;
@@ -45,9 +46,19 @@ internal sealed class PeopleService : IPeopleService
         return personDtos;
     }
 
-    public async Task<PersonDetailDto> DetailsAsync(string userName, CancellationToken cancellationToken)
+    public async Task<PersonDetailDto?> DetailsAsync(string userName, CancellationToken cancellationToken)
     {
-        var person = await container.People.ByKey(userName).GetValueAsync(cancellationToken);
-        return person.Adapt<PersonDetailDto>();
+        try
+        {
+            var person = await container.People.ByKey(userName).GetValueAsync(cancellationToken);
+            return person.Adapt<PersonDetailDto>();
+        }
+        catch (DataServiceQueryException e)
+        when (e is not null && e.InnerException is DataServiceClientException d)
+        {
+            if (d.StatusCode == 404) return null;
+            throw;
+        }
+
     }
 }

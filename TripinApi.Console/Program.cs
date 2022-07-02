@@ -18,38 +18,62 @@ var peopleService = scopeProvider.GetRequiredService<IPeopleService>();
 
 while (true)
 {
-    Console.WriteLine("Press 1 to get a list of people");
-    Console.WriteLine("Press 2 to search a person by full name");
-    Console.WriteLine("Press 3 to search a person by username");
-    Console.WriteLine("Press q or CTRL+C to finish");
-    var key = Console.ReadKey().KeyChar;
-    Console.WriteLine();
-
-    if (key == 'q')
-        break;
-
-    if (key == '1')
+    try
     {
-        var people = await peopleService.ListAsync(cancellationToken);
-        await ShowPeopleList(people);
-    }
-    else if (key == '2')
-    {
-        Console.WriteLine("Type the full name of the person you would like to search");
-        var names = Console.ReadLine();
-        if (string.IsNullOrEmpty(names))
+        Console.WriteLine("Press 1 to get a list of people");
+        Console.WriteLine("Press 2 to search a person by full name");
+        Console.WriteLine("Press 3 to search a person by username");
+        Console.WriteLine("Press q or CTRL+C to finish");
+        var key = Console.ReadKey().KeyChar;
+        Console.WriteLine();
+
+        if (key == 'q')
+            break;
+
+        if (key == '1')
         {
-            Console.WriteLine("Invalid search name. The name cannot be empty");
-            continue;
+            var people = await peopleService.ListAsync(cancellationToken);
+            await ShowPeopleList(people);
         }
-        var people = await peopleService.SearchByNamesAsync(names, cancellationToken);
-        await ShowPeopleList(people);
+        else if (key == '2')
+        {
+            Console.WriteLine("Type a list of names separated by spaces, of the person you would like to search (case sensitive)");
+            var names = Console.ReadLine();
+            if (string.IsNullOrEmpty(names))
+            {
+                Console.WriteLine("Invalid search name. The name cannot be empty");
+                continue;
+            }
+            var people = await peopleService.SearchByNamesAsync(names, cancellationToken);
+            await ShowPeopleList(people);
+        }
+        else if (key == '3')
+        {
+            Console.WriteLine("Type the username of the person you would like to search (case sensitive)");
+            var username = Console.ReadLine();
+            if (string.IsNullOrEmpty(username))
+            {
+                Console.WriteLine("Invalid username. The name cannot be empty");
+                continue;
+            }
+            var personDetails = await peopleService.DetailsAsync(username, cancellationToken);
+            if (personDetails == null)
+                Console.WriteLine("Person not found");
+            else
+                ShowPersonDetails(personDetails);
+        }
+        else
+        {
+            Console.WriteLine("Invalid option.");
+        }
+        Console.WriteLine();
+
     }
-    else
+    catch (Exception e)
     {
-        Console.WriteLine("Invalid option.");
+        Console.WriteLine(e);
     }
-    Console.WriteLine();
+
 }
 Console.CancelKeyPress -= Console_CancelKeyPress;
 
@@ -72,7 +96,10 @@ async Task ShowPeopleList(PersonPersonalInfoDto[] people)
     if (int.TryParse(Console.ReadLine(), out var personNumber))
     {
         var personDetails = await peopleService.DetailsAsync(people[personNumber].UserName, cancellationToken);
-        ShowPersonDetails(personDetails);
+        if (personDetails == null)
+            Console.WriteLine("Person not found");
+        else
+            ShowPersonDetails(personDetails);
     }
 }
 
