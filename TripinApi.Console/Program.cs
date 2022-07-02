@@ -67,6 +67,7 @@ async Task ShowPeopleList(Person[] people)
         var person = people[i];
         Console.WriteLine($"{i}\t{person.UserName}\t\t{person.FirstName} {person.LastName}");
     }
+    if (people.Length == 0) return;
     Console.WriteLine("Type the number in the first column to see the details of a person, or any other key to go back to the main menu");
     if (int.TryParse(Console.ReadLine(), out var personNumber))
     {
