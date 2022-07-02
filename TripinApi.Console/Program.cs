@@ -1,8 +1,21 @@
-﻿using Trippin;
+﻿using Microsoft.Extensions.DependencyInjection;
+using TripinApi.Console;
+using Trippin;
 
 using var cts = new CancellationTokenSource();
-var token = cts.Token;
-var peopleService = new PeopleService("https://services.odata.org/TripPinRESTierService");
+var cancellationToken = cts.Token;
+
+Console.CancelKeyPress += Console_CancelKeyPress;
+var serviceCollection = new ServiceCollection();
+var configuration = ConfigurationExtension.SetupConfigurationBuilder(args).Build();
+var section = configuration.GetSection(AppSettings.ConfigurationSectionName);
+serviceCollection.AddOptions<AppSettings>().Bind(section).ValidateOnStart();
+serviceCollection.AddScoped<PeopleService>();
+using var provider = serviceCollection.BuildServiceProvider();
+using var scope = provider.CreateScope();
+var scopeProvider = scope.ServiceProvider;
+var peopleService = scopeProvider.GetRequiredService<PeopleService>();
+
 while (true)
 {
     Console.WriteLine("Press 1 to get a list of people");
@@ -17,7 +30,7 @@ while (true)
 
     if (key == '1')
     {
-        var people = await peopleService.ListAsync(token);
+        var people = await peopleService.ListAsync(cancellationToken);
         await ShowPeopleList(people);
     }
     else if (key == '2')
@@ -29,7 +42,7 @@ while (true)
             Console.WriteLine("Invalid search name. The name cannot be empty");
             continue;
         }
-        var people = await peopleService.SearchByNamesAsync(names, token);
+        var people = await peopleService.SearchByNamesAsync(names, cancellationToken);
         await ShowPeopleList(people);
     }
     else
@@ -37,6 +50,12 @@ while (true)
         Console.WriteLine("Invalid option.");
     }
     Console.WriteLine();
+}
+Console.CancelKeyPress -= Console_CancelKeyPress;
+
+void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+{
+    cts.Cancel();
 }
 
 async Task ShowPeopleList(Person[] people)
@@ -51,7 +70,7 @@ async Task ShowPeopleList(Person[] people)
     Console.WriteLine("Type the number in the first column to see the details of a person, or any other key to go back to the main menu");
     if (int.TryParse(Console.ReadLine(), out var personNumber))
     {
-        var personDetails = await peopleService.DetailsAsync(people[personNumber].UserName, token);
+        var personDetails = await peopleService.DetailsAsync(people[personNumber].UserName, cancellationToken);
         ShowPersonDetails(personDetails);
     }
 }

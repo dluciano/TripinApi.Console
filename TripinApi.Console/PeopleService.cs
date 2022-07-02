@@ -1,13 +1,14 @@
-﻿using Trippin;
+﻿using Microsoft.Extensions.Options;
+using Trippin;
+
+namespace TripinApi.Console;
 
 sealed class PeopleService
 {
     private readonly Container container;
 
-    public PeopleService(string uri)
-    {
-        container = new(new Uri(uri));
-    }
+    public PeopleService(IOptions<AppSettings> options) =>
+        container = new(new Uri(options.Value.TripPinApiUrl));
 
     public async Task<Person[]> ListAsync(CancellationToken cancellationToken)
     {
