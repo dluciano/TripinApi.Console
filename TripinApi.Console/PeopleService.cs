@@ -1,7 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Threading;
-using Trippin;
+﻿using Trippin;
 
 sealed class PeopleService
 {
@@ -19,9 +16,20 @@ sealed class PeopleService
         return people.ToArray();
     }
 
-    public void Search()
+    public async Task<Person[]> SearchByNamesAsync(string names, CancellationToken cancellationToken)
     {
-        Console.WriteLine("Search not yet implemented");
+        var namesArr = names.Split(" ").Select(s => s.Trim()).ToArray();
+        string BuildContainsQuery(string field) =>
+           string.Join(" or ", namesArr.Select(name => $"({field} ne null and contains({field},'{name}'))"));
+        var firstNameQuery = BuildContainsQuery("FirstName");
+        var middleNameQuery = BuildContainsQuery("MiddleName");
+        var lastNameQuery = BuildContainsQuery("LastName");
+        var query = $"{firstNameQuery} or {middleNameQuery} or {lastNameQuery}";
+        var people = await container.People
+            .AddQueryOption("$filter", query)
+            .AddQueryOption("$select", "UserName, FirstName, LastName")
+            .ExecuteAsync(cancellationToken);
+        return people.ToArray();
     }
 
     internal async Task<Person> DetailsAsync(string userName, CancellationToken token)

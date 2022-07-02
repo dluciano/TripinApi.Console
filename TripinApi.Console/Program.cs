@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using Trippin;
+﻿using Trippin;
 
 using var cts = new CancellationTokenSource();
 var token = cts.Token;
@@ -8,7 +6,8 @@ var peopleService = new PeopleService("https://services.odata.org/TripPinRESTier
 while (true)
 {
     Console.WriteLine("Press 1 to get a list of people");
-    Console.WriteLine("Press 2 to search a person by name");
+    Console.WriteLine("Press 2 to search a person by full name");
+    Console.WriteLine("Press 3 to search a person by username");
     Console.WriteLine("Press q or CTRL+C to finish");
     var key = Console.ReadKey().KeyChar;
     Console.WriteLine();
@@ -19,45 +18,63 @@ while (true)
     if (key == '1')
     {
         var people = await peopleService.ListAsync(token);
-        Console.WriteLine("Number\tUser Name\t\tFull Name");
-        Console.WriteLine("---------\t\t---------");
-        for (var i = 0; i < people.Length; i++)
-        {
-            var person = people[i];
-            Console.WriteLine($"{i}\t{person.UserName}\t\t{person.FirstName} {person.LastName}");
-        }
-        Console.WriteLine("Type the number in the first column to see the details of a person, or any other key to go back to the main menu");
-        if (int.TryParse(Console.ReadLine(), out var personNumber))
-        {
-            var personDetails = await peopleService.DetailsAsync(people[personNumber].UserName, token);
-            Console.WriteLine("\n====================");
-            Console.WriteLine($"Username: {personDetails.UserName}");
-            Console.WriteLine($"First name: {personDetails.FirstName}");
-            Console.WriteLine($"Middle name: {personDetails.MiddleName}");
-            Console.WriteLine($"First name: {personDetails.LastName}");
-            Console.WriteLine($"Gender: {personDetails.Gender}");
-            Console.WriteLine($"Age: {personDetails.Age}");
-            Console.WriteLine($"Emails: {string.Join(", ", personDetails.Emails)}");
-            Console.WriteLine($"Favorite Feature: {personDetails.FavoriteFeature}");
-            Console.WriteLine($"Features: {string.Join(", ", personDetails.Features)}");
-            foreach (var address in personDetails.AddressInfo)
-            {
-                Console.WriteLine($"Address: {address.Address}");
-                Console.WriteLine($"City: {address.City.Name}");
-                Console.WriteLine($"Region: {address.City.Region}");
-                Console.WriteLine($"Country: {address.City.CountryRegion}");
-            }
-            Console.WriteLine($"Home address: {personDetails.HomeAddress}");
-            Console.WriteLine("====================");
-        }
+        await ShowPeopleList(people);
     }
     else if (key == '2')
     {
-        peopleService.Search();
+        Console.WriteLine("Type the full name of the person you would like to search");
+        var names = Console.ReadLine();
+        if (string.IsNullOrEmpty(names))
+        {
+            Console.WriteLine("Invalid search name. The name cannot be empty");
+            continue;
+        }
+        var people = await peopleService.SearchByNamesAsync(names, token);
+        await ShowPeopleList(people);
     }
     else
     {
         Console.WriteLine("Invalid option.");
     }
     Console.WriteLine();
+}
+
+async Task ShowPeopleList(Person[] people)
+{
+    Console.WriteLine("Number\tUser Name\t\tFull Name");
+    Console.WriteLine("------\t---------\t\t---------");
+    for (var i = 0; i < people.Length; i++)
+    {
+        var person = people[i];
+        Console.WriteLine($"{i}\t{person.UserName}\t\t{person.FirstName} {person.LastName}");
+    }
+    Console.WriteLine("Type the number in the first column to see the details of a person, or any other key to go back to the main menu");
+    if (int.TryParse(Console.ReadLine(), out var personNumber))
+    {
+        var personDetails = await peopleService.DetailsAsync(people[personNumber].UserName, token);
+        ShowPersonDetails(personDetails);
+    }
+}
+
+static void ShowPersonDetails(Person person)
+{
+    Console.WriteLine("\n====================");
+    Console.WriteLine($"Username: {person.UserName}");
+    Console.WriteLine($"First name: {person.FirstName}");
+    Console.WriteLine($"Middle name: {person.MiddleName}");
+    Console.WriteLine($"First name: {person.LastName}");
+    Console.WriteLine($"Gender: {person.Gender}");
+    Console.WriteLine($"Age: {person.Age}");
+    Console.WriteLine($"Emails: {string.Join(", ", person.Emails)}");
+    Console.WriteLine($"Favorite Feature: {person.FavoriteFeature}");
+    Console.WriteLine($"Features: {string.Join(", ", person.Features)}");
+    foreach (var address in person.AddressInfo)
+    {
+        Console.WriteLine($"Address: {address.Address}");
+        Console.WriteLine($"City: {address.City.Name}");
+        Console.WriteLine($"Region: {address.City.Region}");
+        Console.WriteLine($"Country: {address.City.CountryRegion}");
+    }
+    Console.WriteLine($"Home address: {person.HomeAddress}");
+    Console.WriteLine("====================");
 }
