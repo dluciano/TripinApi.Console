@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Options;
 
-namespace TripinApi.Console;
+namespace TrippinApi.Services;
 
-sealed class AppSettings
+public sealed class AppSettings
 {
     public const string ConfigurationSectionName = nameof(AppSettings);
     public string TripPinApiUrl { get; init; } = string.Empty;
