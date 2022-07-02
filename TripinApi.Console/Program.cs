@@ -10,11 +10,11 @@ var serviceCollection = new ServiceCollection();
 var configuration = ConfigurationExtension.SetupConfigurationBuilder(args).Build();
 var section = configuration.GetSection(AppSettings.ConfigurationSectionName);
 serviceCollection.AddOptions<AppSettings>().Bind(section).ValidateOnStart();
-serviceCollection.AddScoped<PeopleService>();
+serviceCollection.AddScoped<IPeopleService, PeopleService>();
 using var provider = serviceCollection.BuildServiceProvider();
 using var scope = provider.CreateScope();
 var scopeProvider = scope.ServiceProvider;
-var peopleService = scopeProvider.GetRequiredService<PeopleService>();
+var peopleService = scopeProvider.GetRequiredService<IPeopleService>();
 
 while (true)
 {

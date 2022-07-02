@@ -3,7 +3,7 @@ using Trippin;
 
 namespace TripinApi.Console;
 
-sealed class PeopleService
+sealed class PeopleService : IPeopleService
 {
     private readonly Container container;
 
@@ -33,9 +33,9 @@ sealed class PeopleService
         return people.ToArray();
     }
 
-    internal async Task<Person> DetailsAsync(string userName, CancellationToken token)
+    public async Task<Person> DetailsAsync(string userName, CancellationToken cancellationToken)
     {
-        var person = await container.People.ByKey(userName).GetValueAsync(token);
+        var person = await container.People.ByKey(userName).GetValueAsync(cancellationToken);
         return person;
     }
 }
