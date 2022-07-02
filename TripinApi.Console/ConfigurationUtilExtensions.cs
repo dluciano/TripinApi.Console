@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Configuration;
 
-namespace TripinApi.Console;
+namespace TripPinApi.Console;
 
 internal static class ConfigurationExtension
 {

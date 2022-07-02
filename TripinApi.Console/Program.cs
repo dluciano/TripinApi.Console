@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TripinApi.Console;
-using Trippin;
+using TrippinApi.Services;
+using TripPinApi.Console;
 
 using var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
@@ -10,7 +10,7 @@ var serviceCollection = new ServiceCollection();
 var configuration = ConfigurationExtension.SetupConfigurationBuilder(args).Build();
 var section = configuration.GetSection(AppSettings.ConfigurationSectionName);
 serviceCollection.AddOptions<AppSettings>().Bind(section).ValidateOnStart();
-serviceCollection.AddScoped<IPeopleService, PeopleService>();
+serviceCollection.ConfigurePeopleServices();
 using var provider = serviceCollection.BuildServiceProvider();
 using var scope = provider.CreateScope();
 var scopeProvider = scope.ServiceProvider;
@@ -58,7 +58,7 @@ void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
     cts.Cancel();
 }
 
-async Task ShowPeopleList(Person[] people)
+async Task ShowPeopleList(PersonPersonalInfoDto[] people)
 {
     Console.WriteLine("Number\tUser Name\t\tFull Name");
     Console.WriteLine("------\t---------\t\t---------");
@@ -76,7 +76,7 @@ async Task ShowPeopleList(Person[] people)
     }
 }
 
-static void ShowPersonDetails(Person person)
+static void ShowPersonDetails(PersonDetailDto person)
 {
     Console.WriteLine("\n====================");
     Console.WriteLine($"Username: {person.UserName}");
@@ -88,13 +88,18 @@ static void ShowPersonDetails(Person person)
     Console.WriteLine($"Emails: {string.Join(", ", person.Emails)}");
     Console.WriteLine($"Favorite Feature: {person.FavoriteFeature}");
     Console.WriteLine($"Features: {string.Join(", ", person.Features)}");
-    foreach (var address in person.AddressInfo)
-    {
-        Console.WriteLine($"Address: {address.Address}");
-        Console.WriteLine($"City: {address.City.Name}");
-        Console.WriteLine($"Region: {address.City.Region}");
-        Console.WriteLine($"Country: {address.City.CountryRegion}");
-    }
-    Console.WriteLine($"Home address: {person.HomeAddress}");
+    Console.WriteLine("Addresses: ");
+    Array.ForEach(person.AddressInfo, PrintLocation);
+    Console.WriteLine("Home Address: ");
+    PrintLocation(person.HomeAddress);
     Console.WriteLine("====================");
+}
+
+static void PrintLocation(LocationDto location)
+{
+    if (location == null) return;
+    Console.WriteLine($"Address: {location.Address}");
+    Console.WriteLine($"City: {location.City.Name}");
+    Console.WriteLine($"Region: {location.City.Region}");
+    Console.WriteLine($"Country: {location.City.CountryRegion}");
 }
