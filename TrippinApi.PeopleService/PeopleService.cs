@@ -10,6 +10,7 @@ internal sealed class PeopleService : IPeopleService
     private readonly Container container;
     public const string SelectPersonInfoQuery = "UserName, FirstName, LastName";
 
+
     public PeopleService(IOptions<AppSettings> options) =>
         container = new(new Uri(options.Value.TripPinApiUrl));
 
@@ -18,7 +19,9 @@ internal sealed class PeopleService : IPeopleService
         var people = (await container.People.AddQueryOption("$select", SelectPersonInfoQuery)
             .ExecuteAsync(cancellationToken))
             .ToArray();
-        var personDtos = people.Select(p => p.Adapt<PersonPersonalInfoDto>()).ToArray();
+
+        var personDtos = people.Select(person => person.AsPersonalInfoDto()).ToArray();
+
         return personDtos;
     }
 
@@ -42,7 +45,7 @@ internal sealed class PeopleService : IPeopleService
             .AddQueryOption("$select", SelectPersonInfoQuery)
             .ExecuteAsync(cancellationToken))
             .ToArray();
-        var personDtos = people.Select(p => p.Adapt<PersonPersonalInfoDto>()).ToArray();
+        var personDtos = people.Select(p => p.AsPersonalInfoDto()).ToArray();
         return personDtos;
     }
 
@@ -51,7 +54,7 @@ internal sealed class PeopleService : IPeopleService
         try
         {
             var person = await container.People.ByKey(userName).GetValueAsync(cancellationToken);
-            return person.Adapt<PersonDetailDto>();
+            return person.AsPersonalDetailDto();
         }
         catch (DataServiceQueryException e)
         when (e is not null && e.InnerException is DataServiceClientException d)
@@ -59,6 +62,5 @@ internal sealed class PeopleService : IPeopleService
             if (d.StatusCode == 404) return null;
             throw;
         }
-
     }
 }
